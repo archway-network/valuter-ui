@@ -16,6 +16,7 @@ import LastPageIcon from '@material-ui/icons/LastPage';
 
 import * as API from "../api";
 import { Divider } from '@material-ui/core';
+import { TableHead } from '@mui/material';
 
 /*----------------------- */
 const useStyles1 = makeStyles((theme: Theme) =>
@@ -97,20 +98,25 @@ const useStyles2 = makeStyles({
         '&:hover': {
             background: '#b4b4b433',
         }
+    },
+    tableHead: {
+        backgroundColor: '#000',
+        color: '#FFF',
+        fontWeight: 'bold'
     }
 });
 
 /**-------- */
 
 export type DataTableRow = {
-    id?: number;
-    title?: string;
-    subtitle?: string;
+    id?: unknown;
+    cols?: string[];
 }
 
 interface Props {
     pagination?: API.Pagination;
     rows: DataTableRow[];
+    headers?: string[];
     onChangePage?: (event: React.MouseEvent<HTMLButtonElement>, newPage: number) => void;
     onRowClick?: (event: React.MouseEvent<any>, index: number) => void;
 }
@@ -122,15 +128,25 @@ export default function DataTable(props: Props) {
     return (
         <TableContainer component={Paper} >
             <Table stickyHeader className={classes.table} aria-label="custom pagination table">
+
+                <TableHead >
+                    <TableRow>
+                        {props?.headers && props?.headers?.map((col, index) => (
+                            <TableCell className={classes.tableHead} key={index} >
+                                {col}
+                            </TableCell>
+                        ))}
+                    </TableRow>
+                </TableHead>
+
                 <TableBody>
                     {props?.rows && props?.rows?.map((row, index) => (
                         <TableRow key={index} className={classes.tableRow} onClick={(e) => props.onRowClick ? props.onRowClick(e, index) : null}>
-                            <TableCell component="th" scope="row" >
-                                {row?.title + "  - "}
-                                <span style={{ color: "#888" }}>
-                                    {row?.subtitle}
-                                </span>
-                            </TableCell>
+                            {row?.cols && row?.cols?.map((col, index) => (
+                                <TableCell key={index} component="th" scope="row" >
+                                    {col}
+                                </TableCell>
+                            ))}
                         </TableRow>
                     ))}
                 </TableBody>

@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import {
+  Alert,
   AppBar,
   Button,
+  Menu,
+  MenuItem,
   Dialog,
   DialogActions,
   DialogContent,
@@ -10,14 +13,17 @@ import {
   IconButton,
   Toolbar,
   Typography,
-  Theme
 } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 import { makeStyles } from '@mui/styles';
 import './Main.css';
 import * as API from "../api";
 import WinnersList from '../layouts/WinnersList'
+import Winner from '../layouts/Winner'
 
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+
+/*------------------ */
 
 const theme = createTheme();
 const useStyles = makeStyles({
@@ -53,6 +59,9 @@ const useStyles = makeStyles({
     width: '5rem',
     marginLeft: '.5rem'
   },
+  menuItem: {
+    textTransform: 'capitalize'
+  }
 });
 
 /*---------------------*/
@@ -61,12 +70,56 @@ function Main() {
 
   const classes = useStyles();
 
+  // const conf = 
+
   /**------------- */
 
   useEffect(() => {
 
-    // return () => {}
+    loadChallenges()
+
   }, [])
+
+
+  /**------------- */
+
+  // Challenges menu
+  const [anchorEl, setAnchorEl] = useState(null);
+  const menuOpen = Boolean(anchorEl);
+  const handleClickMenu = (event: any) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+  };
+
+  const [selectedChallenge, setSelectedChallenge] = useState(null as unknown as string);
+  const handleMenuItem = (item: string) => {
+    if (item == "all") item = ""
+    setSelectedChallenge(item)
+    handleCloseMenu()
+  };
+
+  const [challengesList, setChallengesList] = useState(null as unknown as string[]);
+  const loadChallenges = () => {
+    API.getAllChallenges().then(
+      res => {
+        res.unshift("all")
+        setChallengesList(res)
+      },
+      err => { console.error(err); }
+    )
+  }
+
+  /**------------- */
+  const [winnerDetailsDlgOpen, setWinnerDetailsDlg] = useState(false)
+  const handleWinnerDetailsOpen = () => { setWinnerDetailsDlg(true) }
+  const handleWinnerDetailsClose = () => { setWinnerDetailsDlg(false) }
+  const [winnerDetailsAddress, setWinnerDetailsAddress] = useState(null as unknown as string)
+  const handleWinnerListClick = (dataRow: any) => {
+    setWinnerDetailsDlg(true)
+    setWinnerDetailsAddress(dataRow.id)
+  }
 
   /**------------- */
 
@@ -75,51 +128,64 @@ function Main() {
     <div className="Main">
       <AppBar position="static">
         <Toolbar>
-          {/* <IconButton edge="start" className={classes.menuButton} color="inherit" aria-label="menu">
-            <MenuIcon />
-          </IconButton> */}
-          <Typography variant="h6" className={classes.title}>
+          <Typography variant="h6" component="div" className={classes.title}>
             Valuter - Testnet Evaluator
           </Typography>
-
-          {/* <IconButton
-            edge="end"
-            aria-label="Statistics"
+          <Button
+            // color="inherit"
+            id="challenges-button"
+            aria-controls={menuOpen ? 'challenges-menu' : undefined}
             aria-haspopup="true"
-            onClick={handleStatisticsOpen}
-            color="inherit"
-            title="Data collection statistics"
+            aria-expanded={menuOpen ? 'true' : undefined}
+            onClick={handleClickMenu}
+            variant="contained"
+            disableElevation
+            endIcon={<KeyboardArrowDownIcon />}
+          >Challenges</Button>
+          <Menu
+            id="challenges-menu"
+            aria-labelledby="challenges-button"
+            anchorEl={anchorEl}
+            open={menuOpen}
+            onClose={handleCloseMenu}
           >
-            <EqualizerIcon />
-          </IconButton> */}
+            {challengesList && challengesList.map((row, index) =>
+              <MenuItem key={index} className={classes.menuItem} onClick={() => handleMenuItem(row)}>{row}</MenuItem>
+            )}
+          </Menu>
 
         </Toolbar>
       </AppBar>
 
       {/* ------------------------- */}
 
-      {/* <SensorSearch onSearchResultClick={handleSearchResultClick} /> */}
-      <WinnersList />
+      <WinnersList
+        filterByChallenge={selectedChallenge}
+        key={selectedChallenge}
+        onListItemClick={handleWinnerListClick} />
 
       {/* ------------------------- */}
 
-      {/* <Dialog
-        open={dlgMyPushSensors}
-        onClose={handleMyPushSensorsClose}
-        aria-labelledby="my-push-sensor-dialog-title"
-        aria-describedby="my-push-sensor-dialog-description"
-        fullScreen={true}
+      <Dialog
+        open={winnerDetailsDlgOpen}
+        onClose={handleWinnerDetailsClose}
+        aria-labelledby="winner-details-title"
+        aria-describedby="winner-details-description"
+        fullScreen={false}
+        maxWidth='lg'
+        fullWidth={true}
       >
-        <DialogTitle id="my-push-sensor-dialog-title">{"My Push Sensors"}</DialogTitle>
+        <DialogTitle id="winner-details-title">Winner Details</DialogTitle>
         <DialogContent>
-          {dlgMyPushSensors && <MyPushSensors onSearchResultClick={handleSearchResultClick} />}
+          {winnerDetailsAddress && <Winner address={winnerDetailsAddress} />}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleMyPushSensorsClose} color="primary" autoFocus>
+          <Button onClick={handleWinnerDetailsClose} color="primary" autoFocus>
             Close
           </Button>
         </DialogActions>
-      </Dialog> */}
+      </Dialog>
+
 
       {/* ------------------------- */}
     </div >
